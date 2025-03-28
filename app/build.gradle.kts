@@ -78,5 +78,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.2.2")
 
     implementation ("com.google.zxing:core:3.5.1")
+    implementation ("com.auth0:java-jwt:4.4.0")
+
 
 }

@@ -21,12 +21,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.transit_ags.R
-import com.example.transit_ags.Utils.generateQRCode // Asegúrate de crear esta función para generar el QR
+import com.example.transit_ags.Utils.generateJwtQrCode // Asegúrate de crear esta función para generar el QR
 
 @Composable
 fun MisViajesScreen(navController: NavController) {
+    var showQr by remember { mutableStateOf(false) }
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var showQR by remember { mutableStateOf(false) }
+    var viajesDisponibles by remember { mutableStateOf(5) } // Inicializar viajes
 
     Column(
         modifier = Modifier
@@ -42,7 +43,7 @@ fun MisViajesScreen(navController: NavController) {
             horizontalArrangement = Arrangement.Start
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_arrow_back), // Icono de regreso
+                painter = painterResource(id = R.drawable.ic_arrow_back),
                 contentDescription = "Regresar",
                 modifier = Modifier
                     .size(32.dp)
@@ -50,7 +51,7 @@ fun MisViajesScreen(navController: NavController) {
             )
         }
 
-        // Avatar y Nombre del Usuario
+        // Avatar y nombre del usuario
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -59,7 +60,7 @@ fun MisViajesScreen(navController: NavController) {
             horizontalArrangement = Arrangement.Start
         ) {
             Image(
-                painter = painterResource(id = R.drawable.avatar), // Avatar del usuario
+                painter = painterResource(id = R.drawable.avatar),
                 contentDescription = "Avatar del usuario",
                 modifier = Modifier
                     .size(100.dp)
@@ -82,21 +83,29 @@ fun MisViajesScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Viajes disponibles
+        // Mostrar viajes disponibles
         Text(
-            text = "Tienes 5 viajes disponibles",
+            text = "Tienes $viajesDisponibles viajes disponibles",
             fontSize = 20.sp,
             color = Color.Gray
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón Pagar Viaje
+        // Botón para pagar viaje y generar QR
         Button(
             onClick = {
-                // Generar QR aleatorio al hacer clic
-                qrBitmap = generateQRCode("Pago-${(1000..9999).random()}") // QR aleatorio
-                showQR = true
+                if (viajesDisponibles > 0) {
+                    qrBitmap = generateJwtQrCode(
+                        idUsuario = "user_123",
+                        tipoUsuario = "estudiante",
+                        fechaPago = System.currentTimeMillis(),
+                        status = "activo"
+                    )
+                    showQr = true
+                } else {
+                    showQr = false
+                }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
             modifier = Modifier
@@ -113,7 +122,7 @@ fun MisViajesScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Instrucciones
+        // Instrucciones para escanear
         Text(
             text = "Escanea el código QR en el lector del camión",
             fontSize = 20.sp,
@@ -124,19 +133,27 @@ fun MisViajesScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Mostrar QR si se presiona el botón
-        if (showQR && qrBitmap != null) {
-            QRCodeCard(qrBitmap!!)
+        // Mostrar QR si está generado
+        if (showQr && qrBitmap != null) {
+            QRCodeCard(
+                qrBitmap!!,
+                onQrScanned = {
+                    showQr = false // Ocultar QR después del escaneo
+                    if (viajesDisponibles > 0) {
+                        viajesDisponibles-- // Restar un viaje
+                    }
+                }
+            )
         }
     }
 }
 
-// Composable para mostrar el QR dinámico
+// Composable para mostrar el QR generado y validarlo
 @Composable
-fun QRCodeCard(qrBitmap: Bitmap) {
+fun QRCodeCard(qrBitmap: Bitmap, onQrScanned: () -> Unit) {
     Card(
         modifier = Modifier
-            .size(180.dp)
+            .size(300.dp)
             .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
@@ -144,11 +161,17 @@ fun QRCodeCard(qrBitmap: Bitmap) {
     ) {
         Image(
             bitmap = qrBitmap.asImageBitmap(),
-            contentDescription = "Código QR generado",
+            contentDescription = "Código QR",
             modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp),
             contentScale = ContentScale.Fit
         )
+
+        // Simular escaneo después de 5 segundos
+        LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(5000) // Esperar 5 segundos para simular escaneo
+            onQrScanned()
+        }
     }
 }
