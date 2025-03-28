@@ -26,6 +26,7 @@ import com.example.transit_ags.Screens.CuentaScreen
 import com.example.transit_ags.Screens.LoginScreen
 import com.example.transit_ags.Screens.MapScreen
 import com.example.transit_ags.Screens.MiCuentaScreen
+import com.example.transit_ags.Screens.MisViajesScreen
 import com.example.transit_ags.Screens.RecargaMapScreen
 import com.example.transit_ags.Screens.RecargarScreen
 import com.example.transit_ags.Screens.RegistroScreen
@@ -91,6 +92,7 @@ fun SetupNavGraph(navController: NavHostController){
         composable("micuenta"){ MiCuentaScreen(navController) }
         composable("recargamap"){ RecargaMapScreen(navController) }
         composable("recargarahora"){ RecargarScreen(navController) }
+        composable("misviajes"){ MisViajesScreen(navController) }
     }
 }
 

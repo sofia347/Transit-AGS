@@ -113,7 +113,7 @@ fun ReporteScreen(navController: NavController) {
             OutlinedTextField(
                 value = rutaTaxi,
                 onValueChange = { rutaTaxi = it },
-                label = { Text("Número de ruta (opcional)", fontSize = 18.sp) },
+                label = { Text("Número de ruta (obligatorio)", fontSize = 18.sp) },
                 modifier = Modifier.fillMaxWidth()
             )
         }else if (selectedTransport == "Taxi"){
