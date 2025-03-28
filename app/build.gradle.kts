@@ -77,4 +77,6 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.2.2")
 
+    implementation ("com.google.zxing:core:3.5.1")
+
 }
