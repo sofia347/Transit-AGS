@@ -24,33 +24,25 @@ import androidx.compose.ui.text.style.TextDecoration
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
-
 @Composable
 fun MapScreen(navController: NavController) {
     val context = LocalContext.current
     val dbHelper = DatabaseHelper(context)
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    val inicioRuta = LatLng(21.88234, -102.28259)
+    val inicioRuta = LatLng(21.882609, -102.293106)
 
     val camaraPosicion = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(inicioRuta, 15f)
+        position = CameraPosition.fromLatLngZoom(inicioRuta, 16f)
     }
 
     val paradas = remember { mutableStateOf<List<LatLng>>(emptyList()) }
 
     val rutaLatLng = remember { mutableStateOf<List<LatLng>>(emptyList()) }
     val showSosDialog = remember { mutableStateOf(false) }
+    val showDialogTaxi = remember { mutableStateOf(false) }
     val paradasActive = remember { mutableStateOf(false) }
     val miUbicacionActive = remember { mutableStateOf(false) }
     val miUbicacion = remember { mutableStateOf<LatLng?>(null) }
-
-    /*
-    LaunchedEffect(Unit) {
-        val puntosRuta = dbHelper.getPuntosDeRuta("RUTA 41 ALAMEDA")
-        if (puntosRuta.isNotEmpty()) {
-            rutaLatLng.value = puntosRuta.map { LatLng(it.latitud, it.longitud) }
-        }
-    }*/
 
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
@@ -78,33 +70,40 @@ fun MapScreen(navController: NavController) {
             }
             Column(modifier = Modifier.align(Alignment.BottomEnd)) {
                 CircularButton(
-                    text = "Mi Ubicación",
-                    color = if (miUbicacionActive.value) Color.Green else Color.Blue
-                ) {
-                    miUbicacionActive.value = !miUbicacionActive.value
-                    if (miUbicacionActive.value) {
-                        miUbicacion.value = LatLng(21.8825, -102.2827) // Simulación de ubicación
-                        Toast.makeText(context, "Ubicación activada", Toast.LENGTH_SHORT).show()
-                    } else {
-                        miUbicacion.value = null
-                        Toast.makeText(context, "Ubicación desactivada", Toast.LENGTH_SHORT).show()
+                    iconResId = R.drawable.ic_location,
+                    onClick = {
+                        miUbicacionActive.value = !miUbicacionActive.value
+                        if (miUbicacionActive.value) {
+                            miUbicacion.value = LatLng(21.8825, -102.2827) // Simulación de ubicación
+                            Toast.makeText(context, "Ubicación activada", Toast.LENGTH_SHORT).show()
+                        } else {
+                            miUbicacion.value = null
+                            Toast.makeText(context, "Ubicación desactivada", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
+                )
                 CircularButton(
-                    text = "Paradas",
-                    color = if (paradasActive.value) Color.Green else Color.Gray
-                ) {
-                    paradasActive.value = !paradasActive.value
-                    if (paradasActive.value) {
-                        paradas.value = dbHelper.getParadas()
-                        Toast.makeText(context, "Se activó la vista de paradas", Toast.LENGTH_SHORT).show()
-                    } else {
-                        paradas.value = emptyList()
-                        Toast.makeText(context, "Se desactivó la vista de paradas", Toast.LENGTH_SHORT).show()
+                    iconResId = R.drawable.ic_bus_stop,
+                    onClick = {
+                        paradasActive.value = !paradasActive.value
+                        if (paradasActive.value) {
+                            paradas.value = dbHelper.getParadas()
+                            Toast.makeText(context, "Se activó la vista de paradas", Toast.LENGTH_SHORT).show()
+                        } else {
+                            paradas.value = emptyList()
+                            Toast.makeText(context, "Se desactivó la vista de paradas", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                }
+                )
+                CircularButton(
+                    iconResId = R.drawable.ic_taxi,
+                    onClick = { showDialogTaxi.value = true }
+                )
 
-                CircularButton("SOS", Color.Red) { showSosDialog.value = true }
+                CircularButton(
+                    iconResId = R.drawable.ic_sos,
+                    onClick = { showSosDialog.value = true }
+                )
             }
         }
     }
@@ -129,26 +128,54 @@ fun MapScreen(navController: NavController) {
             }
         )
     }
+
+    if (showDialogTaxi.value) {
+        AlertDialog(
+            onDismissRequest = { showSosDialog.value = false },
+            title = { Text("AVISO TAXIS") },
+            text = { Text("Estás a punto de marcar tu ubicacion como zona en busqueda de Taxi. ¿Estás seguro de marcar tu ubicación?") },
+            confirmButton = {
+                Button(onClick = {
+                    showDialogTaxi.value = false
+                    navController.navigate("taxistas")
+                    Toast.makeText(context, "Mandando señal a los Taxis cercanos...", Toast.LENGTH_LONG).show()
+                }) {
+                    Text("Sí, enviar señal")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialogTaxi.value = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
 
-
-
 @Composable
-fun CircularButton(text: String, color: Color, onClick: () -> Unit) {
+fun CircularButton(iconResId: Int, onClick: () -> Unit) {
     FloatingActionButton(
         onClick = onClick,
-        modifier = Modifier.padding(16.dp).size(56.dp).shadow(4.dp, shape = RoundedCornerShape(50)),
-        containerColor = color,
+        modifier = Modifier
+            .padding(16.dp)
+            .size(56.dp)
+            .shadow(8.dp, shape = RoundedCornerShape(75)),
+        containerColor = Color.White,
         shape = RoundedCornerShape(50)
     ) {
-        Text(text.take(2), color = Color.White)
+        Icon(
+            painter = painterResource(id = iconResId),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(56.dp)
+        )
     }
 }
 
 @Composable
 fun CamionCombiButtons(dbHelper: DatabaseHelper, rutaLatLng: MutableState<List<LatLng>>) {
-    val rutasCamion = listOf("RUTA 20 NORTE", "RUTA 20 SUR", "RUTA 41 ALAMEDA")
-    val rutasCombi = listOf("Ruta A", "Ruta B", "Ruta C", "Ruta D")
+    val rutasCamion = listOf("RUTA 20 NORTE", "RUTA 20 SUR", "RUTA 40 NORTE", "RUTA 41 ALAMEDA")
+    val rutasCombi = listOf("PALO ALTO - ITA", "MONTOYA - AGS", "LOS CUERVOS - AGS", "ITA - PALO ALTO - CONOS")
     var showCamionDropdown by remember { mutableStateOf(false) }
     var showCombiDropdown by remember { mutableStateOf(false) }
     var rutaSeleccionada by remember { mutableStateOf<String?>(null) }
@@ -205,6 +232,7 @@ fun CamionCombiButtons(dbHelper: DatabaseHelper, rutaLatLng: MutableState<List<L
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_minibus),
+                            tint = Color.Unspecified,
                             contentDescription = "Combi",
                             modifier = Modifier.size(24.dp)
                         )
@@ -260,5 +288,3 @@ fun CamionCombiButtons(dbHelper: DatabaseHelper, rutaLatLng: MutableState<List<L
         }
     }
 }
-
-

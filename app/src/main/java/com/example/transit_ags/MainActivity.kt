@@ -26,11 +26,13 @@ import com.example.transit_ags.Screens.CuentaScreen
 import com.example.transit_ags.Screens.LoginScreen
 import com.example.transit_ags.Screens.MapScreen
 import com.example.transit_ags.Screens.MiCuentaScreen
+import com.example.transit_ags.Screens.MisViajesScreen
 import com.example.transit_ags.Screens.RecargaMapScreen
 import com.example.transit_ags.Screens.RecargarScreen
 import com.example.transit_ags.Screens.RegistroScreen
 import com.example.transit_ags.Screens.ReporteScreen
 import com.example.transit_ags.Screens.SaldoScreen
+import com.example.transit_ags.Screens.VistaTaxistaScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,6 +93,8 @@ fun SetupNavGraph(navController: NavHostController){
         composable("micuenta"){ MiCuentaScreen(navController) }
         composable("recargamap"){ RecargaMapScreen(navController) }
         composable("recargarahora"){ RecargarScreen(navController) }
+        composable("misviajes"){ MisViajesScreen(navController) }
+        composable("taxistas"){ VistaTaxistaScreen(navController) }
     }
 }
 

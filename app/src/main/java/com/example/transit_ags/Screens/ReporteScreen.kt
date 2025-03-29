@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 
 @Composable
-fun ReporteScreen(navController: NavController){
+fun ReporteScreen(navController: NavController) {
     var selectedTransport by remember { mutableStateOf("Selecciona") }
     var selectedIncident by remember { mutableStateOf("Selecciona") }
     var additionalComments by remember { mutableStateOf("") }
@@ -38,12 +38,56 @@ fun ReporteScreen(navController: NavController){
     val imagePickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         imageUris = uris
     }
+    var rutaTaxi by remember { mutableStateOf("")}
 
     val incidentQuestions = mapOf(
-        "Tiempo" to listOf("¿Cuánto tiempo esperaste?", "¿La unidad cumplió el horario?"),
-        "Conducta" to listOf("¿El conductor fue amable?", "¿Hubo alguna falta de respeto?"),
-        "Seguridad" to listOf("¿Te sentiste seguro en la unidad?", "¿Hubo algún comportamiento sospechoso?"),
-        "Limpieza" to listOf("¿La unidad estaba limpia?", "¿Había mal olor?")
+        "Choque" to listOf(
+            "¿Qué tipo de accidente ocurrió?",
+            "¿El accidente involucró solo al transporte público o a otros vehículos?",
+            "¿Hubo heridos?",
+            "¿El transporte continuó su ruta después del accidente? "
+        ),
+        "Pelea" to listOf(
+            "¿Quiénes estuvieron involucrados? ",
+            "¿Se usó violencia física? ",
+            "¿Intervino la autoridad o seguridad del transporte? "
+        ),
+        "Robo" to listOf(
+            "¿Qué tipo de robo ocurrió?",
+            "¿El robo fue con violencia?",
+            "¿Se alertó a las autoridades?",
+            "¿El transporte se detuvo por el incidente? "
+        ),
+        "Acoso" to listOf(
+            "¿Qué tipo de acoso ocurrió?",
+            "¿El conductor tomó alguna acción? ",
+            "¿Se reportó a alguna autoridad o seguridad del transporte?"
+        ),
+        "Falla mecánica" to listOf(
+            "¿Qué falló en el transporte?",
+            "¿El transporte pudo seguir su ruta?",
+            "¿Se llamó a asistencia mecánica?"
+        ),
+        "Tiempo" to listOf(
+            "¿Cuánto tiempo estuvo esperando el transporte?",
+            "¿Se recibió algún aviso sobre el retraso?",
+            "¿El retraso afectó su llegada a destino?"
+        ),
+        "Conducta" to listOf(
+            "¿Cómo describiría la actitud del operador? ",
+            "¿El operador siguió las normas de tránsito? ",
+            "¿El operador tuvo algún comportamiento inadecuado?"
+        ),
+        "Seguridad" to listOf(
+            "¿Cómo percibió la seguridad en el transporte?",
+            "¿Hubo personas sospechosas o comportamientos inusuales? ",
+            "¿Se reportó la situación a las autoridades o personal del transporte?"
+        ),
+        "Limpieza" to listOf(
+            "¿Cuál es el problema de limpieza? ",
+            "¿La suciedad o el mal olor afectan la comodidad del transporte?",
+            "¿Se ha reportado este problema anteriormente?"
+        )
     )
     val selectedQuestions = incidentQuestions[selectedIncident] ?: emptyList()
 
@@ -60,10 +104,68 @@ fun ReporteScreen(navController: NavController){
         Spacer(modifier = Modifier.height(16.dp))
 
         ReportCard("¿En qué transporte sucedió el hecho?", listOf("Camión", "Combi", "Taxi")) { selectedTransport = it }
-        ReportCard("¿Qué tipo de incidente ocurrió?", listOf("Tiempo", "Conducta", "Seguridad", "Limpieza")) { selectedIncident = it }
+        ReportCard(
+            "¿Qué tipo de incidente ocurrió?",
+            listOf("Choque", "Pelea", "Robo", "Acoso", "Falla mecánica", "Tiempo", "Conducta", "Seguridad", "Limpieza")
+        ) { selectedIncident = it }
+
+        if (selectedTransport == "Camión" || selectedTransport == "Combi" ) {
+            OutlinedTextField(
+                value = rutaTaxi,
+                onValueChange = { rutaTaxi = it },
+                label = { Text("Número de ruta (obligatorio)", fontSize = 18.sp) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }else if (selectedTransport == "Taxi"){
+            OutlinedTextField(
+                value = rutaTaxi,
+                onValueChange = { rutaTaxi = it },
+                label = { Text("Número de Taxi (obligatorio)", fontSize = 18.sp) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         selectedQuestions.forEach { question ->
-            ReportCard(question, listOf("Sí", "No")) {}
+            if (question.contains("Comentarios adicionales")) {
+                var localComments by remember { mutableStateOf("") }
+                OutlinedTextField(
+                    value = localComments,
+                    onValueChange = { localComments = it },
+                    label = { Text(question, fontSize = 18.sp) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                val options = when {
+                    question.contains("¿Cuánto tiempo estuvo esperando el transporte?") ->
+                        listOf("Menos de 10 minutos", "Entre 10 y 20 minutos", "Entre 20 y 30 minutos", "Más de 30 minutos")
+                    question.contains("¿Cómo describiría la actitud del operador?") ->
+                        listOf("Amable y respetuoso", "Indiferente o poco atento", "Grosero o irrespetuoso")
+                    question.contains("¿Cómo percibió la seguridad en el transporte?") ->
+                        listOf("Segura, sin incidentes", "Insegura, hubo situaciones preocupantes", "Muy insegura, hubo un incidente grave")
+                    question.contains("¿Cuál es el problema de limpieza?") ->
+                        listOf("Suciedad visible (basura, derrames, polvo)", "Mal olor (drenaje, comida en descomposición, etc.)", "Ambas (suciedad y mal olor)")
+                    question.contains("¿Qué tipo de robo ocurrió?") ->
+                        listOf("Cartera o celular", "Robo de pertenencias grandes")
+                    question.contains("¿Qué tipo de accidente ocurrió?") ->
+                        listOf("Choque leve", "Choque fuerte", "Atropellamiento", "Volcadura")
+                    question.contains("¿Quiénes estuvieron involucrados?") ->
+                        listOf("Pasajeros", "Conductor y pasajero")
+                    question.contains("¿Qué falló en el transporte?") ->
+                        listOf("Motor", "Frenos", "Luces")
+                    question.contains("¿Qué tipo de acoso ocurrió?") ->
+                        listOf("Verbal","Físico","Otro")
+                    question.contains("¿El accidente involucró solo al transporte público o a otros vehículos?") ->
+                        listOf("Solo el transporte","Varios vehículos")
+                    question.contains("¿El operador siguió las normas de tránsito?") ->
+                        listOf("Sí, condujo de manera segura","No, manejó de forma imprudente","No estoy seguro/a")
+                    question.contains("¿El operador tuvo algún comportamiento inadecuado?") ->
+                        listOf("Sí, uso de celular mientras conducía","Sí, exceso de velocidad o frenazos bruscos","Sí, no respetó paradas o ignoró pasajeros","No, todo estuvo bien")
+                    question.contains("¿Hubo personas sospechosas o comportamientos inusuales?") ->
+                        listOf("No, todo normal","Sí, personas con actitud sospechosa","Sí, hubo discusiones o altercados")
+                    else -> listOf("Sí", "No")
+                }
+                ReportCard(question, options) {}
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -105,13 +207,11 @@ fun ReporteScreen(navController: NavController){
             Text("Enviar Reporte", fontSize = 20.sp)
         }
 
-        // Mostrar el diálogo de confirmación cuando showDialog es verdadero
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
                 confirmButton = {
                     TextButton(onClick = {
-                        // Acción para enviar el reporte
                         showDialog = false
                     }) {
                         Text("Confirmar")
@@ -130,7 +230,7 @@ fun ReporteScreen(navController: NavController){
 }
 
 @Composable
-fun ReportCard(title: String, options: List<String>, onOptionSelected: (String) -> Unit) {
+fun ReportCard(title: String, options: List<String>, onOptionSelected: (String) -> Unit = {}) {
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Selecciona") }
 
