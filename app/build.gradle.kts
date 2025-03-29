@@ -80,5 +80,8 @@ dependencies {
     implementation ("com.google.zxing:core:3.5.1")
     implementation ("com.auth0:java-jwt:4.4.0")
 
+    implementation("com.google.maps.android:maps-utils-ktx:3.4.0")
+
+
 
 }

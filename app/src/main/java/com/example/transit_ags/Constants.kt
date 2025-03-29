@@ -2,7 +2,7 @@ package com.example.transit_ags
 
 object Constants {
     const val DATABASE_NAME = "TransITA"
-    const val DATABASE_VERSION = 10
+    const val DATABASE_VERSION = 16
     const val TABLE_PARADA = "Parada"
     const val TABLE_CONDUCTOR = "Conductor"
     const val TABLE_PUNTOS_RECARGA = "Puntos_Recarga"
